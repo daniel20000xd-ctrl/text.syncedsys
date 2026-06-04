@@ -5,16 +5,18 @@ export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ embed?: string }>
+  searchParams: Promise<{ embed?: string; token?: string }>
 }
 
 export default async function BoardPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { embed } = await searchParams
+  const { embed, token } = await searchParams
   const isEmbed = embed === 'true'
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = token
+    ? await supabase.auth.getUser(token)
+    : await supabase.auth.getUser()
 
   if (!user) {
     return (
