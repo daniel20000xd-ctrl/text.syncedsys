@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import EditorClient from './EditorClient'
 
 export const dynamic = 'force-dynamic'
@@ -13,10 +14,20 @@ export default async function BoardPage({ params, searchParams }: Props) {
   const { embed, token } = await searchParams
   const isEmbed = embed === 'true'
 
-  const supabase = await createClient()
-  const { data: { user } } = token
-    ? await supabase.auth.getUser(token)
-    : await supabase.auth.getUser()
+  // When a token is passed (iframe embed cross-subdomain), build a client that
+  // injects it as the Authorization header so RLS sees the correct user.
+  const supabase = token
+    ? createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+          cookies: { getAll: () => [], setAll: () => {} },
+        }
+      )
+    : await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser(token ?? undefined)
 
   if (!user) {
     return (
