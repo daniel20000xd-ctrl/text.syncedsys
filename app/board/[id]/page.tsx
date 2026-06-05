@@ -12,10 +12,8 @@ interface Props {
 export default async function BoardPage({ params, searchParams }: Props) {
   const { id } = await params
   const { embed, token } = await searchParams
-  const isEmbed = embed === 'true'
+  const isEmbed = embed === 'true' || embed === '1'
 
-  // When a token is passed (iframe embed cross-subdomain), build a client that
-  // injects it as the Authorization header so RLS sees the correct user.
   const supabase = token
     ? createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
